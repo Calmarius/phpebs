@@ -17,4 +17,8 @@ INSTALLATION
 - Open index.php. It will ask for your MySQL username, MySQL password, MySQL database name and other miscellaneous stuff.
   After installing it should work. You can register and log in.
 
+SCREENSHOTS
+
+![Task view](screenshots/task_view.png "Task view")
+
 
