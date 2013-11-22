@@ -21,16 +21,6 @@ function echo_content()
     global $createTaskError;
     global $parentTask;
 
-	if ($parentTask['timeLogged'] > 600)
-	{
-		?>
-			<p class="alert">
-				You have already logged <?php echo_escaped(secondsToHms($parentTask['timeLogged'])); ?> time on the task you are going to split. 
-				Splitting it will make the logged work lost. Consider creating another task and add it as child.
-			</p>
-		<?php
-	}
-
 	?>
 	    <form method="post" action=".">
 	        <div class="centerbox">

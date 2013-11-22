@@ -126,7 +126,7 @@ X
                     END IF;
             END IF;
             SELECT LAST_INSERT_ID() AS id, 'success';
-	    CALL maintainPaddingTask(parentId, estimate);
+	        CALL maintainPaddingTask(parentId, estimate);
             UPDATE tasks SET estimatedTime = 0 WHERE id = parentId;
     END$$
 
@@ -288,8 +288,8 @@ X
             IF (paddingId <> 0) THEN
 	            -- Already have a padding task so update its estimate, then leave.
                     UPDATE tasks 
-                    	SET estimatedTime = estimatedTime - newTaskEstimate
-                            WHERE id = paddingId;
+                    SET estimatedTime = estimatedTime - newTaskEstimate
+                    WHERE id = paddingId;
             	LEAVE now;
             END IF;
             SELECT estimatedTime - timeLogged - newTaskEstimate, projectId INTO remainingEstimate, _projectId FROM tasks WHERE id = taskId;
@@ -439,17 +439,31 @@ X
     CREATE  FUNCTION `addChildOnTaskUnchecked`(`parentId` INT, `taskId` INT) RETURNS tinyint(1)
     BEGIN
 	    DECLARE affectedRows INT;
+        DECLARE prevState VARCHAR(20); 
+        DECLARE toParentRemainingEstimate INT DEFAULT 0;
+        DECLARE taskEstimate INT DEFAULT 0;
+        DECLARE remainingEstimate INT DEFAULT 0;
+        DECLARE parentProjectId INT DEFAULT 0;
 	    IF parentId = taskId THEN
-            	RETURN FALSE;
-            END IF;
-            UPDATE tasks SET parentTaskId=parentId WHERE id = taskId;
-            SELECT ROW_COUNT() INTO affectedRows;
-            IF affectedRows = 0 THEN
-            	RETURN FALSE;
-            END IF;
-            -- CALL stopTaskUnchecked(parentId);
-            UPDATE tasks SET status='splitted' WHERE id = parentId;
-            RETURN TRUE;
+            RETURN FALSE;
+        END IF;
+	    SELECT estimatedTime - timeLogged, projectId INTO toParentRemainingEstimate, parentProjectId FROM tasks WHERE id = parentId;
+	    SELECT estimatedTime INTO taskEstimate FROM tasks WHERE id = taskId;
+        UPDATE tasks SET parentTaskId=parentId WHERE id = taskId;
+        SELECT ROW_COUNT() INTO affectedRows;
+        IF affectedRows = 0 THEN
+         	RETURN FALSE;
+        END IF;
+        -- CALL stopTaskUnchecked(parentId);
+        SELECT status INTO prevState FROM tasks WHERE id = parentId;
+        IF prevState <> 'splitted' THEN
+            INSERT INTO tasks
+            (projectId, parentTaskId, summary, estimatedTime, status)
+            VALUES
+            (parentProjectId, parentId, "Padding", toParentRemainingEstimate, "padding");
+        END IF;
+        UPDATE tasks SET status='splitted' WHERE id = parentId;
+        RETURN TRUE;
     END$$
 
     CREATE  FUNCTION `doesUserHaveTheProject`(`uid` INT, `pid` INT) RETURNS tinyint(1)
@@ -505,7 +519,7 @@ X
       `id` int(11) NOT NULL AUTO_INCREMENT,
       `txt` text CHARACTER SET utf8,
       PRIMARY KEY (`id`)
-    ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin AUTO_INCREMENT=12 ;
+    ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 COLLATE=utf8_bin ;
 
     CREATE TABLE IF NOT EXISTS `projects` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -515,7 +529,7 @@ X
       `startedAt` datetime NOT NULL,
       PRIMARY KEY (`id`),
       KEY `ownerId` (`ownerId`)
-    ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=11 ;
+    ) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
 
     CREATE TABLE IF NOT EXISTS `tasks` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -531,7 +545,7 @@ X
       PRIMARY KEY (`id`),
       KEY `projectId` (`projectId`),
       KEY `parentTask` (`parentTaskId`)
-    ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=295 ;
+    ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
     CREATE TABLE IF NOT EXISTS `tmpSpeeds` (
       `speed` decimal(23,4) DEFAULT NULL
@@ -543,8 +557,9 @@ X
       `passwordHash` varchar(255) NOT NULL COMMENT 'SHA1',
       PRIMARY KEY (`id`),
       UNIQUE KEY `userName_2` (`userName`)
-    ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 AUTO_INCREMENT=9 ;
+    ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
     COMMIT;
+
 X;
 
     $VIEW = 'install';
