@@ -111,10 +111,11 @@ $maximumTime = $secondsToGoSamples[$nSamples - 1];
 $timeToChance = array();
 $timeStep = ($maximumTime - $minimumTime) / $nDensitySamples;
 $currentIndex = 0;
+$nSecondsToGoSamples = count($secondsToGoSamples);
 for ($i = 0; $i < $nDensitySamples; $i++)
 {
 	$current = $minimumTime + $i * $timeStep;
-	while ($current >= $secondsToGoSamples[$currentIndex])
+	while (($current >= $secondsToGoSamples[$currentIndex]) && ($currentIndex < $nSecondsToGoSamples))
 	{
 		$currentIndex++;
 	}
