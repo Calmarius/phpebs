@@ -127,7 +127,7 @@ X
             END IF;
             SELECT LAST_INSERT_ID() AS id, 'success';
 	        CALL maintainPaddingTask(parentId, estimate);
-            UPDATE tasks SET estimatedTime = 0 WHERE id = parentId;
+            UPDATE tasks SET estimatedTime = 0, timeLogged = 0 WHERE id = parentId;
     END$$
 
     CREATE  PROCEDURE `deleteProject`(IN `uid` INT, IN `pid` INT, IN `password` VARCHAR(255))
@@ -172,14 +172,14 @@ X
             SELECT 'success';
     END$$
 
-    CREATE  PROCEDURE `editTask`(uid INT, tid INT, newSummary VARCHAR(255), newDescription TEXT, newEstimate INT)
+    CREATE  PROCEDURE `editTask`(IN `uid` INT, IN `tid` INT, IN `newSummary` VARCHAR(255), IN `newDescription` TEXT, IN `newEstimate` INT)
     now: BEGIN
 	    IF NOT doesUserHaveTheTask(uid, tid) THEN
-            	SELECT 'accessdenied';
-                    LEAVE now;
-            END IF;
-            UPDATE tasks SET summary = newSummary, description = newDescription, estimatedTime = newEstimate WHERE id = tid;
-            SELECT 'success';
+            SELECT 'accessdenied';
+            LEAVE now;
+        END IF;
+        UPDATE tasks SET summary = newSummary, description = newDescription, estimatedTime = newEstimate WHERE id = tid;
+        SELECT 'success';
     END$$
 
     CREATE  PROCEDURE `finishTask`(IN `_userId` INT, IN `_taskId` INT)
@@ -306,16 +306,22 @@ X
 
     CREATE  PROCEDURE `moveTask`(IN `userId` INT, IN `newParent` INT, IN `taskId` INT)
     now: BEGIN
+	    DECLARE prevParentId INT DEFAULT 0;
 	    IF NOT doesUserHaveTheTask(userId, taskId) THEN
-            	SELECT 'accessdenied';
-                    LEAVE now;
-            END IF;
-            CALL removeTaskTreeUnchecked(taskId);
-            IF NOT addChildOnTaskUnchecked(newParent, taskId) THEN
-            	SELECT 'failed';
-                    LEAVE now;
-            END IF;
+            SELECT 'accessdenied';
+            LEAVE now;
+        END IF;
+        SELECT parentTaskId INTO prevParentId FROM tasks WHERE id = taskId;
+        IF prevParentId = newParent THEN
             SELECT 'success';
+            LEAVE now;
+        END IF;
+        CALL removeTaskTreeUnchecked(taskId);
+        IF NOT addChildOnTaskUnchecked(newParent, taskId) THEN
+            SELECT 'failed';
+            LEAVE now;
+        END IF;
+        SELECT 'success';
     END$$
 
     CREATE  PROCEDURE `multiply`(IN `x` INT, IN `y` INT)
@@ -456,7 +462,7 @@ X
         END IF;
         -- CALL stopTaskUnchecked(parentId);
         SELECT status INTO prevState FROM tasks WHERE id = parentId;
-        IF prevState <> 'splitted' THEN
+        IF (prevState <> 'splitted') AND (toParentRemainingEstimate > 0) THEN
             INSERT INTO tasks
             (projectId, parentTaskId, summary, estimatedTime, status)
             VALUES
@@ -529,7 +535,7 @@ X
       `startedAt` datetime NOT NULL,
       PRIMARY KEY (`id`),
       KEY `ownerId` (`ownerId`)
-    ) ENGINE=MyISAM  DEFAULT CHARSET=latin1;
+    ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
 
     CREATE TABLE IF NOT EXISTS `tasks` (
       `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -559,7 +565,6 @@ X
       UNIQUE KEY `userName_2` (`userName`)
     ) ENGINE=MyISAM  DEFAULT CHARSET=latin1 ;
     COMMIT;
-
 X;
 
     $VIEW = 'install';

@@ -25,12 +25,15 @@ if ($nSpeeds == 0)
     $speeds[0]['speed'] = 1;
     $averageSpeed = 1;
 }
-$averageSpeed = 0;
-foreach ($speeds as $speed)
+else
 {
-	$averageSpeed += $speed['speed'];
+    $averageSpeed = 0;
+    foreach ($speeds as $speed)
+    {
+	    $averageSpeed += $speed['speed'];
+    }
+    $averageSpeed /= $nSpeeds;
 }
-$averageSpeed /= $nSpeeds;
 
 //var_dump($nSpeeds);
 $pendingTasks = runPreparedQuery("CALL getPendingTasks(?)", $pid);
