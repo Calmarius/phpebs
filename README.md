@@ -19,6 +19,11 @@ INSTALLATION
 
 SCREENSHOTS
 
+![Projects](screenshots/projects.png "Projects")
 ![Task view](screenshots/task_view.png "Task view")
+![Completed task options](screenshots/completed_task_options.png "Completed task options")
+![Stopped task options](screenshots/stopped_task_options.png "Stopped task options")
+![Edit task](screenshots/edit_task.png "Edit task")
+![Prognosis](screenshots/prognosis.png "Prognosis")
 
 
