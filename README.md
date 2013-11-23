@@ -2,11 +2,11 @@ PHPEBS
 
 This is a personal PHP/MySQL task/project management software. 
 It implements evidence based scheduling (http://en.wikipedia.org/wiki/Evidence-based_Scheduling)
-to estimate when will the project finishes.
+to estimate when will the project finish.
 
 REQUIREMENTS
 
-- PHP (I haven't checked which minimum version this would work, but it's probably ok with v5 or above)
+- PHP (I haven't checked which minimum version this would work with, but it's probably ok with v5 or above)
 - MySQL
 - A MySQL database and an user with all permissions on it (eg. stored procedures).
 
