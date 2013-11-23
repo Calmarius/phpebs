@@ -14,7 +14,7 @@ INSTALLATION
 
 - Download the whole stuff.
 - Put it into a folder in your webserver. 
-- Open index.php. It will ask for your MySQL username, MySQL password, MySQL database name and other miscellaneous stuff.
+- Open index.php your browser. It will ask for your MySQL username, MySQL password, MySQL database name and other miscellaneous stuff.
   After installing it should work. You can register and log in.
 
 SCREENSHOTS
