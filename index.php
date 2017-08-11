@@ -7,7 +7,9 @@ if ($INSTALLED)
     require_once('shadow.php');
     require_once('setupmysqli.php');
 }
-session_start(__SESSION_NAME);
+
+session_name(__SESSION_NAME);
+session_start();
 
 if (get_magic_quotes_gpc()) 
 {
