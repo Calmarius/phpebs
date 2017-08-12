@@ -13,14 +13,25 @@
         ?>
     </head>
     <body>
-    	<div id="heading">
-	    	<h1><?php echo_title(); ?> - <a href="index.php">phpEBS</a></h1>
-    	</div>
-    	<div id="menu">
-    		<?php echo_menu(); ?>
-    	</div>
-    	<?php echo_error(); ?>
+        <div id="heading">
+        <h1><?php echo_title(); ?> - <a href="index.php">phpEBS</a></h1>
+        </div>
+        <div id="menu">
+            <?php echo_menu(); ?>
+        </div>
+        <?php echo_error(); ?>
         <?php echo_content(); ?>
         <div id="footer">by Calmarius</div>
+        <script>
+            // Purpose of this function is to prevent the session from timing out.
+            function pingSite()
+            {
+                var xh = new XMLHttpRequest();
+                xh.open("GET", "?view=empty", true);
+                xh.send();
+            }
+
+            setInterval(pingSite, 300000);
+        </script>
     </body>
 </html>
