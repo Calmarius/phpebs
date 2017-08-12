@@ -39,21 +39,21 @@ $COMMANDS = array
 
 $PAGES = array
 (
-	'createnewproject' => true,
-	'createtask' => true,
-	'deleteproject' => true,
-	'deletetask' => true,
-	'edittask' => true,
-	'install' => true,
-	'login' => true,
-	'logout' => true,
-	'opsuccess' => true,
+    'createnewproject' => true,
+    'createtask' => true,
+    'deleteproject' => true,
+    'deletetask' => true,
+    'edittask' => true,
+    'install' => true,
+    'login' => true,
+    'logout' => true,
+    'opsuccess' => true,
     'prognosis' => true,
     'projects' => true,
     'project' => true,
-	'register' => true,
-	'renameproject' => true,
-	'taskcreatesuccess' => true
+    'register' => true,
+    'renameproject' => true,
+    'taskcreatesuccess' => true
 );
 
 $SCRIPTS = array();

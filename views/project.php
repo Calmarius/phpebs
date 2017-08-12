@@ -18,18 +18,18 @@ if (!isset($_GET['hid'])) $_GET['hid'] = 0;
 // First build the flat tree.
 foreach ($result as $task)
 {
-	$taskTree[$task['id']] = $task;
-	$taskTree[$task['id']]['childTasks'] = array();
+    $taskTree[$task['id']] = $task;
+    $taskTree[$task['id']]['childTasks'] = array();
 }
 
 // Then assign childtasks
 
 foreach ($taskTree as $key => $task)
 {
-	if (isset($taskTree[$task['parentTaskId']]))
-	{
-		$taskTree[$task['parentTaskId']]['childTasks'][] = $task['id'];
-	}
+    if (isset($taskTree[$task['parentTaskId']]))
+    {
+        $taskTree[$task['parentTaskId']]['childTasks'][] = $task['id'];
+    }
 }
 
 // Collect parentless tasks.
@@ -37,10 +37,10 @@ foreach ($taskTree as $key => $task)
 $rootTasks = array();
 foreach ($taskTree as $task)
 {
-	if ($task['parentTaskId'] == 0)
-	{
-		$rootTasks[] = $task;
-	}
+    if ($task['parentTaskId'] == 0)
+    {
+        $rootTasks[] = $task;
+    }
 }
 
 function isAllChildTasksDone($task)
@@ -93,7 +93,7 @@ function assignMetaInfo(&$task)
     }
     else if (!$task['hasChildTasks'])
     {
-        // Not done, but don't have subtasks. 
+        // Not done, but don't have subtasks.
         $heightNumber = 2;
     }
     else
@@ -101,8 +101,7 @@ function assignMetaInfo(&$task)
         // have subtasks
         $heightNumber= 2 + getChildTasksHeight($task);
     }
-    
-    
+
     $task['heightNumber'] = $heightNumber; // height number is used to show the bigger tasks first (so floating them will use up the screen space more effectively).
 }
 
@@ -149,9 +148,9 @@ $projectStatusMap = array
 
 function echo_title()
 {
-	$project = runPreparedQuery("CALL getProjectById(?)", $_SESSION['projectId']);
-	$project = $project[0];
-	echo_escaped($_SESSION['projectName']);
+    $project = runPreparedQuery("CALL getProjectById(?)", $_SESSION['projectId']);
+    $project = $project[0];
+    echo_escaped($_SESSION['projectName']);
 }
 
 function echo_tasks($tasks, $level)
@@ -160,30 +159,37 @@ function echo_tasks($tasks, $level)
     global $taskError;
     global $statusTextMap;
     global $taskTree;
-    
+
     $outdivclass = $level == 0 ? "outertaskdiv" : "";
+
+    $somethingIsInProgress = false;
 
     foreach ($tasks as $task)
     {
         $allDone = true;
         $hasChildTasks = false;
         $childTasks = array();
-       
+
         foreach ($task['childTasks'] as $taskId)
         {
             $childTask = $taskTree[$taskId];
-	        $childTasks[] = $childTask;
+            $childTasks[] = $childTask;
         }
-        
+
         $hasChildTasks = $task['hasChildTasks'];
         $allDone = $task['allChildTasksDone'];
-        
+
         $effectiveStatus = $task['status'];
         if ($effectiveStatus == 'splitted' && $hasChildTasks && $allDone) $effectiveStatus = 'done';
-        
+
+        if ($effectiveStatus == 'in progress')
+        {
+            $somethingIsInProgress = true;
+        }
+
         ?>
             <div class="taskdiv <?php echo $outdivclass;?> <?php echo_escaped($taskStyleMap[$effectiveStatus]); ?> ">
-            	<a id="t<?php echo_escaped($task['id']); ?>"></a>
+                <a id="t<?php echo_escaped($task['id']); ?>"></a>
                 <h3>T<?php echo_escaped($task['id']); ?> - <?php echo_escaped($task['summary']); ?> [<?php echo_escaped($statusTextMap[$task['status']]);?>] <a href="javascript:toggle('tsk<?php echo_escaped($task['id']); ?>')"><small>Toggle</small></a></h3>
                 <div id="tsk<?php echo_escaped($task['id']); ?>" <?php echo $effectiveStatus == 'done' ? 'style="display: none"' : ''?>>
                     <p>
@@ -223,7 +229,7 @@ function echo_tasks($tasks, $level)
                                 else if ($task['status'] == 'in progress')
                                 {
                                     ?>
-                                        <button type="submit" name="cmd" value="stoptask">Stop</button>
+                                        <button type="submit" name="cmd" value="stoptask" onclick="window.onbeforeunload=null;">Stop</button>
                                     <?php
                                 }
                                 else if ($task['status'] == 'done')
@@ -243,23 +249,36 @@ function echo_tasks($tasks, $level)
                         <p>
                             <small><?php echo_escaped($task['description']); ?></small>
                         </p>
-		            </div>
-                	<?php
-                	    if ($hasChildTasks && $allDone) 
-                	    {
-                	        ?>
-                	            <p>(All subtasks are done)</p>
-                	        <?php
-                	    }
-                	?>		        
-	                <div id="subt<?php echo_escaped($task['id']); ?>" <?php echo $hasChildTasks && $allDone ? 'style="display: none"' : ''?>>
-	                	<?php
-	                		echo_tasks($childTasks, $level + 1);
-	                	?>
-	                	<div style="clear:both"></div>
-	                </div>                
-	            </div>
+                    </div>
+                    <?php
+                        if ($hasChildTasks && $allDone)
+                        {
+                            ?>
+                                <p>(All subtasks are done)</p>
+                            <?php
+                        }
+                    ?>
+                    <div id="subt<?php echo_escaped($task['id']); ?>" <?php echo $hasChildTasks && $allDone ? 'style="display: none"' : ''?>>
+                        <?php
+                            echo_tasks($childTasks, $level + 1);
+                        ?>
+                        <div style="clear:both"></div>
+                    </div>
+                </div>
             </div>
+        <?php
+    }
+    if ($somethingIsInProgress)
+    {
+        ?>
+            <script>
+                window.onbeforeunload = function(ev)
+                {
+                    var str = 'A task is in progress, do you really want to leave the page?'
+                    (ev || window.event).returnValue = str;
+                    return str;
+                };
+            </script>
         <?php
     }
 }
@@ -267,7 +286,7 @@ function echo_tasks($tasks, $level)
 function init_view()
 {
     global $SCRIPTS;
-    
+
     $SCRIPTS[] = 'js/actions.js';
 }
 
@@ -280,30 +299,30 @@ function echo_content()
     global $project;
     global $projectStatusMap;
     global $rootTasks;
-    
-	?>	    
-	    <p>
-	        Project status: <?php echo_escaped($projectStatusMap[$project['status']]); ?>, 
-	        <?php
-	            if ($project['status'] != 'planning')
-	            {
-	                ?>
-	                    Started at: <?php echo_escaped($project['startedAt']); ?>
-	                <?php
-	            }
-	        ?>
-	    </p>
+
+    ?>
+        <p>
+            Project status: <?php echo_escaped($projectStatusMap[$project['status']]); ?>,
+            <?php
+                if ($project['status'] != 'planning')
+                {
+                    ?>
+                        Started at: <?php echo_escaped($project['startedAt']); ?>
+                    <?php
+                }
+            ?>
+        </p>
         <p class="alert"><?php echo_escaped(@$taskError); ?></p>
-	<?php
+    <?php
 
-	echo_tasks($rootTasks, 0);
+    echo_tasks($rootTasks, 0);
 
-	?>
-		<p style="clear:both">Options:</p>
-		<ul>
-			<li><a href="?view=createtask&amp;pid=<?php echo_escaped($_SESSION['projectId']);?>&amp;parentid=0">New task</a></li>
-		</ul>
-	<?php
+    ?>
+        <p style="clear:both">Options:</p>
+        <ul>
+            <li><a href="?view=createtask&amp;pid=<?php echo_escaped($_SESSION['projectId']);?>&amp;parentid=0">New task</a></li>
+        </ul>
+    <?php
 }
 
 
